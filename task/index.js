@@ -1,11 +1,12 @@
 const express = require("express");
-
+const cors = require('cors')
 const app = express();
 
+// Middleware
 app.use(express.json());
+app.use(cors())
 
-
-
+// Dummy database
 let users = [
   {
     uid: 108243,
@@ -31,17 +32,19 @@ let users = [
 ];
 
 
+// Home route
 app.get("/", (req, res) => {
   res.send("Express server is running");
 });
 
 
-
+// Get all users
 app.get("/users", (req, res) => {
   res.status(200).json(users);
 });
 
 
+// Get single user
 app.get("/users/:uid", (req, res) => {
 
   const uid = Number(req.params.uid);
@@ -49,14 +52,16 @@ app.get("/users/:uid", (req, res) => {
   const user = users.find(u => u.uid === uid);
 
   if (!user) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json({
+      message: "User not found"
+    });
   }
 
   res.status(200).json(user);
 });
 
 
-
+// Create new user
 app.post("/users", (req, res) => {
 
   const { uid, att, total_sub, bonus, name } = req.body;
@@ -67,7 +72,6 @@ app.post("/users", (req, res) => {
     });
   }
 
- 
   const exists = users.find(u => u.uid === uid);
 
   if (exists) {
@@ -90,9 +94,11 @@ app.post("/users", (req, res) => {
     message: "User added successfully",
     user: newUser
   });
+
 });
 
 
+// Update user
 app.put("/users/:uid", (req, res) => {
 
   const uid = Number(req.params.uid);
@@ -100,37 +106,53 @@ app.put("/users/:uid", (req, res) => {
   const index = users.findIndex(u => u.uid === uid);
 
   if (index === -1) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json({
+      message: "User not found"
+    });
   }
 
   users[index] = {
     ...users[index],
-    att: req.body.att,
-    total_sub: req.body.total_sub,
-    bonus: req.body.bonus,
-    name: req.body.name
+    att: req.body.att ?? users[index].att,
+    total_sub: req.body.total_sub ?? users[index].total_sub,
+    bonus: req.body.bonus ?? users[index].bonus,
+    name: req.body.name ?? users[index].name
   };
 
   res.status(200).json({
     message: "User updated successfully",
     user: users[index]
   });
+
 });
 
 
+// Delete user
 app.delete("/users/:uid", (req, res) => {
-  const userId = Number(req.params.uid);
-  const index = users.findIndex(u => u.uid === userId);
+
+  const uid = Number(req.params.uid);
+
+  const index = users.findIndex(u => u.uid === uid);
 
   if (index === -1) {
-    return res.status(404).json({ message: "User not found" });
+    return res.status(404).json({
+      message: "User not found"
+    });
   }
 
   users.splice(index, 1);
 
-  res.status(204).end();
+  res.status(200).json({
+    message: "User deleted successfully"
+  });
+
 });
 
-app.listen(5000, () => {
-  console.log("Server started on port 5000");
+
+
+// ✅ IMPORTANT FOR RENDER DEPLOYMENT
+const PORT = process.env.PORT || 5000;
+
+app.listen(PORT, () => {
+  console.log(`Server running on port ${PORT}`);
 });
